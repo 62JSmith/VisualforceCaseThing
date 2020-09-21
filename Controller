@@ -1,0 +1,68 @@
+global class UGHExtension {
+
+    public string searchEmpIdString{get;set;}
+    public User searchedUser{get;set;}
+    public Quote__c testq{get;set;}
+    public String teststr{get;set;}
+    public Case newCase{get;set;}
+    public Boolean userNotFound{get;set;}
+    
+    webservice static string makeContact(String empId) { 
+        
+        User u = new User();
+        String returnval = '';
+        //SOMEHOW TRYNA DISPLAY ERROR MESSAGE IF NO EMP ID EXISTS
+        List<User> us = new List<User>();
+        us = [SELECT Id, Name, Employee_Id__c, Designation__c, Phone, Email__c, Supervisor__c FROM User WHERE Employee_Id__c =:empId];
+        if(us.size() < 1){
+            returnval = 'NOTHING';
+        }else{
+            returnval = JSON.serialize(us[0]);
+        }
+        return returnval;
+        
+    }
+    
+    public UGHExtension(){
+        this.searchEmpIdString = '';
+        this.searchedUser = new User();
+        this.newCase = new Case();
+        this.userNotFound = false;
+    }
+    public void apexMethod(){
+       	
+        string passedParam1 = Apexpages.currentPage().getParameters().get('myParam');
+        if(passedParam1.equals('NOTHING')){
+            this.userNotFound = true;
+            System.debug('ugh:' + this.userNotFound);
+        }else{
+            this.userNotFound = false;
+        User u = (User)System.JSON.deserialize(Apexpages.currentPage().getParameters().get('myParam'), User.class);
+        this.teststr = passedParam1;
+        this.searchedUser = u;
+        System.debug('HI: ' + passedParam1);
+        }
+    }
+    public PageReference finishCase(){
+        //Compainant__c
+        //OwnerId
+        System.debug('CASE: ' + this.newCase);
+        System.debug('NOTFOUND: ' + this.userNotFound);
+        if(this.userNotFound == false){
+            List<QueueSobject> abmQueue = [SELECT Id, QueueId FROM QueueSobject WHERE SobjectType = 'Case'and queue.Name = 'IT Help Desk' LIMIT 1];
+            System.debug(abmQueue);
+            
+            this.newCase.OwnerId = abmQueue[0].QueueId;
+            this.newCase.Compainant__c = this.searchedUser.Id;
+            insert this.newCase;
+            
+            PageReference pg = new PageReference('/'+this.newCase.Id);
+        	pg.setRedirect(true);
+        	return pg;
+            
+        }else{
+            //if no user was found, this will do nothing
+            return null;
+        }
+    }
+}
