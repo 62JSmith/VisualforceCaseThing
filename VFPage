@@ -1,0 +1,58 @@
+<apex:page controller="UGHExtension" docType="html-5.0">
+
+    <apex:includeScript value="/soap/ajax/49.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/49.0/apex.js"/>
+    <script>
+    	function changeCase(elId){
+            sforce.connection.sessionId = '{!$Api.Session_ID}';
+        	var x = document.getElementById(elId);
+            //x.value = x.value.toUpperCase();
+            //alert(x.value);
+            sforce.debug.trace=false;
+            var user = sforce.apex.execute("UGHExtension","makeContact",{empId:x.value});
+            //alert(user);
+            jsFunction(user);
+            //document.getElementById('{!$Component.theText}').innerHTML = 'hello';;
+            //rerenderInfo();
+    	}
+    </script>
+    <apex:form >
+		        
+         <apex:actionFunction name="rerenderInfo" reRender="first, err" />
+        
+        <apex:actionFunction name="jsFunction" action="{!apexMethod}" reRender="info, first, err">
+        	<apex:param value="" name="myParam"/>
+    	</apex:actionFunction>
+        
+        <apex:pageBlock title="My Content" mode="edit">
+            <apex:pageMessages id="msgId"/> 
+            <apex:pageBlockSection id="first" title="Enter Employee Id" columns="2">
+                
+                <apex:outputText id="err" rendered="{!userNotFound}">
+                    ERROR: No User with the specified Employee Id was found.  Please enter another Employee Id
+                </apex:outputText>
+                
+                <apex:input value="{!searchEmpIdString}" id="id1" onchange="changeCase('{!$Component.id1}');" />
+                
+            </apex:pageBlockSection>
+            <apex:pageBlockSection id="info" title="User Information">
+          <!--  <apex:outputText label="Name" id="theText" value="{!teststr}"/> --> 
+            <apex:outputField value="{!searchedUser.Name}"/>
+            <apex:outputField value="{!searchedUser.Designation__c}"/>
+            <apex:outputField value="{!searchedUser.Phone}"/>
+            <apex:outputField value="{!searchedUser.Email__c}"/>
+            <apex:outputField value="{!searchedUser.Supervisor__c}"/>
+                
+        </apex:pageBlockSection>
+            <apex:pageBlockSection id="inputs" title="Case Information" >
+            <apex:inputField value="{!newCase.Description}"/>
+            <apex:inputField value="{!newCase.Status}"/>
+            <apex:inputField value="{!newCase.L1_Comments__c}"/>
+            <apex:inputField value="{!newCase.L2_Comments__c}"/>
+            <apex:inputField value="{!newCase.L3_Comments__c}"/>
+            <apex:commandButton action="{!finishCase}" value="Save" id="theButton"/>
+        </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>
